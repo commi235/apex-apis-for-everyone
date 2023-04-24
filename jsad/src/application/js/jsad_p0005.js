@@ -2,7 +2,7 @@
 var jsad = jsad || {};
 
 // encapsulate into an IFFE (https://en.wikipedia.org/wiki/Immediately_invoked_function_expression)
-(function (item, message, debug) {
+(function (item, message, locale, debug) {
   function _validateNumber(pElement) {
     var myItem = item(pElement);
 
@@ -24,9 +24,40 @@ var jsad = jsad || {};
     var myNativeData = myItem.getNativeValue?.();
 
     // Template Strings are nice in JavaScript
-    message.alert(
+    debug.info(
       `getValue DataType: ${typeof myData}; getNativeValue DataType: ${typeof myNativeData}`
     );
+
+    var realValue;
+
+    if (myNativeData) {
+      debug.info("Using Native Value");
+      // number directly, just use the value
+      realValue = myNativeData;
+    } else {
+      debug.info("Using String");
+      // We only get a string, so need to cast
+      // Make sure you know the current NLS settings
+      const decimalSeparator = locale.getDecimalSeparator();
+      const groupSeparator = locale.getGroupSeparator();
+
+      // I'm taking a shortcut here...
+      // Just assuming we can strip the group separator
+      // Don't do that in real code please...
+      realValue = parseFloat(
+        myData.replace(groupSeparator, "").replace(decimalSeparator, ".")
+      );
+    }
+
+    if (!realValue) {
+      message.alert("Sorry, could not read this value.");
+    } else if (realValue < 1000) {
+      message.alert("Thank you for choosing a sensible value");
+    } else if (realValue < 2000) {
+      message.alert("Well, it's still ok.");
+    } else {
+      message.alert("Come on, that's too much.");
+    }
   }
 
   // Page specific namespace
@@ -39,4 +70,4 @@ var jsad = jsad || {};
   // Hand in parameters, in this case the referenced libraries/APIs
   // Makes it easier to understand dependencies
   // and allows own named parameters for shorter calls
-})(apex.item, apex.message, apex.debug);
+})(apex.item, apex.message, apex.locale, apex.debug);
